@@ -59,6 +59,10 @@ int main()
     err = HTS221_init();
     ERROR_parser(err);
 
+    /* Initialize light sensor */
+    err = LTR329_init();
+    ERROR_parser(err);
+
     /* Initialize RTC alarm timer */
     SENSIT_API_set_rtc_alarm(MEASUREMENT_PERIOD);
 
@@ -88,6 +92,24 @@ int main()
                 /* Set send flag */
                 send = TRUE;
             }
+
+            /* Active light sensor */
+            LTR329_set_active_mode(LTR329_GAIN_96X);
+            /* Do a brightness measurement */
+            err = LTR329_measure(&(data.brightness), &trash);
+            /* Sensor back in standby mode */
+            LTR329_set_standby_mode();
+
+            if (err != LTR329_ERR_NONE)
+            {
+                ERROR_parser(err);
+            }
+            else
+            {
+                /* Set send flag */
+                send = TRUE;
+            }
+
             /* Clear interrupt */
             pending_interrupt &= ~INTERRUPT_MASK_RTC;
         }
@@ -141,8 +163,9 @@ int main()
         if (send == TRUE)
         {
 
-            data_s data ={} init(15);
+            data_s data = {} init(15);
             data.Event_ID = 0b1111;
+
             /* Send the message */
             err = RADIO_API_send_message(RGB_MAGENTA, (u8 *)&mydata, sizeof(mydata), FALSE, NULL);
             /* Parse the error code */
