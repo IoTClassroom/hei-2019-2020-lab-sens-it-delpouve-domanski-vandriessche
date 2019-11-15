@@ -1,3 +1,4 @@
 Sens'it ID : B4366B
+Cas d'utilisation: 4 - Detection de l'environnement
 Firstnames : Delpouve Domanski VanDriessche
 Lastnames : Margaux Gauthier Remi
