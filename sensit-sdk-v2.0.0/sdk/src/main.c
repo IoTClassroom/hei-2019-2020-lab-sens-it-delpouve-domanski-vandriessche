@@ -31,9 +31,9 @@ u8 firmware_version[] = "TEMPLATE";
 typedef struct 
 {
     u8 Event_ID : 4;
-    s16 temperature : 8;
-    u16 humidity : 8;
-    u16 brightness : 8;
+    s16 temperature : 16;
+    u16 humidity : 16;
+    u16 brightness : 16;
 
 } data_s;
 
@@ -165,9 +165,6 @@ int main()
         /* Check if we need to send a message */
         if (send == TRUE)
         {
-
-            data_s data = {} init(15);
-            data.Event_ID = 0b1111;
 
             /* Send the message */
             err = RADIO_API_send_message(RGB_MAGENTA, (u8 *)&mydata, sizeof(mydata), FALSE, NULL);
