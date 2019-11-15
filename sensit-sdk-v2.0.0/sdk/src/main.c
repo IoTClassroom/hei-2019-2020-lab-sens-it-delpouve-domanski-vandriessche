@@ -42,6 +42,7 @@ int main()
     button_e btn;
     u16 battery_level;
     bool send = FALSE;
+    u16 trash;
     
     /* Discovery mydata variable */
     data_s mydata ={0};
@@ -96,7 +97,7 @@ int main()
             /* Active light sensor */
             LTR329_set_active_mode(LTR329_GAIN_96X);
             /* Do a brightness measurement */
-            err = LTR329_measure(&(data.brightness), &trash);
+            err = LTR329_measure(&(mydata.brightness), &trash);
             /* Sensor back in standby mode */
             LTR329_set_standby_mode();
 
@@ -129,7 +130,7 @@ int main()
             if (btn == BUTTON_THREE_PRESSES)
             {
                 /* Set button flag to TRUE */
-                data.button = TRUE;
+                mydata.button = TRUE;
 
                 /* Force a RTC alarm interrupt to do a new measurement */
                 pending_interrupt |= INTERRUPT_MASK_RTC;
@@ -172,7 +173,7 @@ int main()
             ERROR_parser(err);
 
             /* Clear button flag */
-            data.button = FALSE;
+            mydata.button = FALSE;
 
             /* Clear send flag */
             send = FALSE;
