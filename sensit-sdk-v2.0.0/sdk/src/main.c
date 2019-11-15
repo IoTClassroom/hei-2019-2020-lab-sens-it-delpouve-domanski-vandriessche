@@ -19,6 +19,10 @@
 #include "fxos8700.h"
 #include "discovery.h"
 
+/******** DEFINES **************************************************/
+#define MEASUREMENT_PERIOD                 3600 /* Measurement & Message sending period, in second */
+
+
 /******* GLOBAL VARIABLES ******************************************/
 u8 firmware_version[] = "TEMPLATE";
 
@@ -30,6 +34,10 @@ int main()
     button_e btn;
     u16 battery_level;
     bool send = FALSE;
+    
+    /* Discovery payload variable */
+    discovery_data_s data = {0};
+    discovery_payload_s payload;
 
     /* Start of initialization */
 
@@ -44,13 +52,8 @@ int main()
     err = HTS221_init();
     ERROR_parser(err);
 
-    /* Initialize light sensor */
-    err = LTR329_init();
-    ERROR_parser(err);
-
-    /* Initialize accelerometer */
-    err = FXOS8700_init();
-    ERROR_parser(err);
+    /* Initialize RTC alarm timer */
+    SENSIT_API_set_rtc_alarm(MEASUREMENT_PERIOD);
 
     /* Clear pending interrupt */
     pending_interrupt = 0;
@@ -67,6 +70,17 @@ int main()
         /* RTC alarm interrupt handler */
         if ((pending_interrupt & INTERRUPT_MASK_RTC) == INTERRUPT_MASK_RTC)
         {
+            /* Do a temperatue & relative humidity measurement */
+            err = HTS221_measure(&(data.temperature), &(data.humidity));
+            if (err != HTS221_ERR_NONE)
+            {
+                ERROR_parser(err);
+            }
+            else
+            {
+                /* Set send flag */
+                send = TRUE;
+            }
             /* Clear interrupt */
             pending_interrupt &= ~INTERRUPT_MASK_RTC;
         }
@@ -85,11 +99,12 @@ int main()
 
             if (btn == BUTTON_THREE_PRESSES)
             {
+                /* Set button flag to TRUE */
+                data.button = TRUE;
+
                 /* Force a RTC alarm interrupt to do a new measurement */
                 pending_interrupt |= INTERRUPT_MASK_RTC;
 
-                /* Set send Sigfox */
-                send = TRUE;
             }
             else if (btn == BUTTON_FOUR_PRESSES)
             {
@@ -118,11 +133,15 @@ int main()
         /* Check if we need to send a message */
         if (send == TRUE)
         {
-
+            /* Build the payload */
+            DISCOVERY_build_payload(&payload, MODE_TEMPERATURE, &data);
             /* Send the message */
-            err = RADIO_API_send_message(RGB_MAGENTA, (u8 *)"HI", 2, FALSE, NULL);
+            err = RADIO_API_send_message(RGB_MAGENTA, (u8 *)"0000", 2, FALSE, NULL);
             /* Parse the error code */
             ERROR_parser(err);
+
+            /* Clear button flag */
+            data.button = FALSE;
 
             /* Clear send flag */
             send = FALSE;
