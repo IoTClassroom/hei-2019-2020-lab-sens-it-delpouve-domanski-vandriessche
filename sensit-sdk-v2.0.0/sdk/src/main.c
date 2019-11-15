@@ -28,6 +28,14 @@ u8 firmware_version[] = "TEMPLATE";
 
 /*******************************************************************/
 
+typedef struct 
+{
+    u8 Event_ID : 4;
+    s16 temperature : 8;
+    u16 humidity : 8;
+} data_s;
+
+
 int main()
 {
     error_t err;
@@ -35,9 +43,8 @@ int main()
     u16 battery_level;
     bool send = FALSE;
     
-    /* Discovery payload variable */
-    discovery_data_s data = {0};
-    discovery_payload_s payload;
+    /* Discovery mydata variable */
+    data_s mydata ={0};
 
     /* Start of initialization */
 
@@ -71,7 +78,7 @@ int main()
         if ((pending_interrupt & INTERRUPT_MASK_RTC) == INTERRUPT_MASK_RTC)
         {
             /* Do a temperatue & relative humidity measurement */
-            err = HTS221_measure(&(data.temperature), &(data.humidity));
+            err = HTS221_measure(&(mydata.temperature),&(mydata.humidity));
             if (err != HTS221_ERR_NONE)
             {
                 ERROR_parser(err);
@@ -133,11 +140,11 @@ int main()
         /* Check if we need to send a message */
         if (send == TRUE)
         {
-            /* Build the payload */
-            DISCOVERY_build_payload(&payload, MODE_TEMPERATURE, &data);
+
+            data_s data ={} init(15);
+            data.Event_ID = 0b1111;
             /* Send the message */
-            err = RADIO_API_send_message(RGB_MAGENTA, (u8 *)"0000", 2, FALSE, NULL);
-            err = RADIO_API_send_message(RGB_GREEN, (u8*)&payload, DISCOVERY_PAYLOAD_SIZE, FALSE, NULL);
+            err = RADIO_API_send_message(RGB_MAGENTA, (u8 *)&mydata, sizeof(mydata), FALSE, NULL);
             /* Parse the error code */
             ERROR_parser(err);
 
@@ -146,6 +153,9 @@ int main()
 
             /* Clear send flag */
             send = FALSE;
+
+
+            
         }
 
         /* Check if all interrupt have been clear */
@@ -156,5 +166,3 @@ int main()
         }
     } /* End of while */
 }
-
-/*******************************************************************/
