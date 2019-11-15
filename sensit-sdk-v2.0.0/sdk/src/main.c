@@ -44,8 +44,6 @@ int main()
     bool send = FALSE;
     
     /* Discovery mydata variable */
-    discovery data_s data = {0};
-    discovery_payload_s payload;
     data_s mydata ={0};
 
     /* Start of initialization */
