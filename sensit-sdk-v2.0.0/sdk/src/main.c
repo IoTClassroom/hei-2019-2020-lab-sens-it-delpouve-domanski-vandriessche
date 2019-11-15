@@ -33,6 +33,8 @@ typedef struct
     u8 Event_ID : 4;
     s16 temperature : 8;
     u16 humidity : 8;
+    u16 brightness : 8;
+
 } data_s;
 
 
@@ -130,7 +132,7 @@ int main()
             if (btn == BUTTON_THREE_PRESSES)
             {
                 /* Set button flag to TRUE */
-                mydata.button = TRUE;
+                data.button = TRUE;
 
                 /* Force a RTC alarm interrupt to do a new measurement */
                 pending_interrupt |= INTERRUPT_MASK_RTC;
@@ -173,7 +175,7 @@ int main()
             ERROR_parser(err);
 
             /* Clear button flag */
-            mydata.button = FALSE;
+            data.button = FALSE;
 
             /* Clear send flag */
             send = FALSE;
